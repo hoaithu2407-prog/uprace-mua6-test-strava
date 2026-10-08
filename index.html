@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>UPRACE OMEGA MÙA 6 - (BẢN TEST DÁN DỮ LIỆU)</title>
+  <title>UPRACE OMEGA MÙA 6 - (BẢN TEST DÁN DỮ LIỆU TỰ ĐỘNG)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- THƯ VIỆN SUPABASE REALTIME -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- THƯ VIỆN ĐỌC FILE EXCEL -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pangolin&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
@@ -18,12 +16,18 @@
     .banner-title-white { text-shadow: 3px 3px 0 #1e3a8a, -3px -3px 0 #1e3a8a, 3px -3px 0 #1e3a8a, -3px 3px 0 #1e3a8a; }
     .banner-title-yellow { color: #facc15; text-shadow: 3px 3px 0 #1e3a8a, -3px -3px 0 #1e3a8a, 3px -3px 0 #1e3a8a, -3px 3px 0 #1e3a8a; }
 
+    input[type="date"] { color-scheme: dark; cursor: pointer; }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) opacity(0.9); cursor: pointer; padding: 4px; border-radius: 4px;
+    }
+
     body.is-admin #sec-compare { order: 1; }
     body.is-admin #sec-paste { order: 2; }
-    body.is-admin #sec-batch { order: 3; }
+    body.is-admin #sec-form { order: 3; }
     body.is-admin #sec-history { order: 4; }
-    body.is-admin #sec-team-board { order: 5; }
-    body.is-admin #sec-indiv-board { order: 6; }
+    body.is-admin #sec-khomao { order: 5; }
+    body.is-admin #sec-team-board { order: 6; }
+    body.is-admin #sec-indiv-board { order: 7; }
 
     body:not(.is-admin) #sec-compare { order: 1; }
     body:not(.is-admin) #sec-team-board { order: 2; }
@@ -34,7 +38,7 @@
 <body class="pb-12">
 
   <div class="bg-amber-500 text-slate-950 font-black text-center py-2 px-4 text-xs sm:text-sm tracking-wide shadow-md">
-    ⚠️ TRANG BẢN SAO THỬ NGHIỆM DÁN DỮ LIỆU TỪ ẢNH CHỤP STRAVA
+    ⚠️ TRANG BẢN SAO THỬ NGHIỆM - BỐC TÁCH & DÁN DỮ LIỆU TỪ ẢNH STRAVA
   </div>
 
   <header class="relative w-full overflow-hidden bg-gradient-to-b from-sky-400 via-cyan-300 to-blue-600 pt-8 pb-12 shadow-2xl border-b-4 border-cyan-400">
@@ -52,13 +56,13 @@
 
   <main class="max-w-6xl mx-auto px-4 mt-6 space-y-8 flex flex-col">
 
-    <!-- THANH TRẠNG THÁI -->
+    <!-- THANH TRẠNG THÁI KHÁCH / ADMIN -->
     <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 flex justify-between items-center text-xs">
       <span id="admin-badge" class="bg-slate-700 text-slate-300 font-bold px-2.5 py-1 rounded-lg">👀 Chế độ: Người Xem</span>
       <button id="auth-btn" onclick="toggleAdminAuth()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-lg shadow">🔑 Đăng Nhập Admin</button>
     </div>
 
-    <!-- KHU VỰC DÁN CHỮ BÓC TÁCH TỪ ẢNH (CHỈ ADMIN THẤY) -->
+    <!-- KHU VỰC DÁN DỮ LIỆU BÓC TÁCH TỪ ẢNH (CHỈ ADMIN THẤY) -->
     <section id="sec-paste" class="admin-only hidden bg-slate-800 border-2 border-emerald-500/50 rounded-2xl p-6 shadow-xl space-y-3">
       <div class="flex justify-between items-center">
         <h2 class="text-emerald-400 font-bold text-base flex items-center gap-2">
@@ -68,7 +72,7 @@
       </div>
 
       <div>
-        <textarea id="paste-input" rows="5" placeholder="Dán đoạn chữ vào đây, ví dụ:
+        <textarea id="paste-input" rows="5" placeholder="Dán đoạn chữ bóc tách vào đây, ví dụ:
 Danh Nguyễn,2026-10-08,Bơi,2397,2.38
 Danh Nguyễn,2026-10-07,Bơi,1000,2.11" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs font-mono text-amber-300 focus:outline-none focus:border-emerald-400"></textarea>
       </div>
@@ -76,14 +80,130 @@ Danh Nguyễn,2026-10-07,Bơi,1000,2.11" class="w-full bg-slate-900 border borde
       <div class="flex justify-end gap-3">
         <button onclick="clearPasteText()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold px-4 py-2 rounded-xl text-xs">Xóa văn bản</button>
         <button onclick="processPastedData()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2 rounded-xl text-xs shadow-lg flex items-center gap-2">
-          🚀 NẠP NGHỆCH TẬP LÊN WEB NGAY
+          🚀 NẠP HÀNG LOẠT VÀO HỆ THỐNG
         </button>
       </div>
 
-      <div id="paste-log-output" class="hidden bg-slate-950 p-3 rounded-xl text-xs font-mono text-emerald-400 border border-slate-800 max-h-32 overflow-y-auto"></div>
+      <div id="paste-log-output" class="hidden p-3 rounded-xl text-xs font-bold transition-all shadow-md mt-2"></div>
     </section>
 
-    <!-- BẢNG XẾP HẠNG VÀ TÍNH NĂNG KHÁC GIỮ NGUYÊN -->
+    <!-- FORM NHẬP TRACK THỦ CÔNG -->
+    <section id="sec-form" class="admin-only hidden bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-cyan-400 font-bold text-base" id="form-title">➕ GHI NHẬN TRACK ĐƠN LẺ (THỦ CÔNG)</h2>
+        <button id="cancel-edit-btn" onclick="cancelEdit()" class="hidden text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1 rounded-lg">❌ Hủy Sửa</button>
+      </div>
+
+      <form id="track-form" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Thành viên</label>
+            <select id="input-member" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 font-semibold" required></select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Đội</label>
+            <input type="text" id="input-team-display" placeholder="—" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-sm text-amber-400 font-bold" readonly />
+            <input type="hidden" id="input-team" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Ngày chạy/bơi</label>
+            <input type="date" id="input-date" onclick="this.showPicker && this.showPicker()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 font-semibold" required />
+          </div>
+
+          <div>
+            <label class="block text-xs font-black text-amber-300 mb-1">⚡ MÔN THI ĐẤU</label>
+            <select id="input-type" class="w-full bg-gradient-to-r from-amber-400 to-yellow-300 text-slate-950 border-2 border-amber-300 rounded-lg px-2 py-2.5 text-xs font-black cursor-pointer">
+              <option value="run" class="bg-slate-900 text-slate-100 font-bold">🏃‍♀️ CHẠY (≥1000m)</option>
+              <option value="swim" class="bg-slate-900 text-slate-100 font-bold">🏊‍♂️ BƠI (≥500m)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Quãng đường (m)</label>
+            <input type="number" id="input-distance" placeholder="VD: 5000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100" required />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Pace</label>
+            <input type="number" step="0.01" id="input-pace" placeholder="VD: 3.12" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100" required />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" id="submit-btn" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold p-2.5 rounded-lg text-sm shadow-lg">Ghi Nhận</button>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-700/60 flex items-center gap-4 bg-slate-900/60 p-3 rounded-xl border border-slate-700/50">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="input-is-suspicious" class="w-4 h-4 text-amber-500 rounded border-slate-700 bg-slate-900" />
+            <span class="text-xs font-bold text-amber-400">⚠️ Cần lưu ý</span>
+          </label>
+          <div class="flex-1 flex items-center gap-2">
+            <span class="text-xs text-slate-400">Ghi chú:</span>
+            <input type="text" id="input-note" placeholder="VD: Thiếu hình chụp Strava..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100" />
+          </div>
+        </div>
+
+        <div id="form-alert" class="hidden p-3 rounded-xl text-xs font-bold transition-all shadow-md mt-2"></div>
+      </form>
+    </section>
+
+    <!-- KÍCH HOẠT TUẦN KHÔ MÁO -->
+    <section id="sec-khomao" class="admin-only hidden bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+      <h2 class="text-amber-400 font-bold mb-4 flex items-center gap-2 text-base">🔥 CẢNH SÁT THU LÊ - QUẢN LÝ TUẦN KHÔ MÁO</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+          <div class="mb-3 text-sm font-bold">Đội 1: <span id="count-khomao-1" class="text-amber-400">0/2 tuần</span></div>
+          <div class="grid grid-cols-4 gap-2" id="btn-group-team1"></div>
+        </div>
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-700">
+          <div class="mb-3 text-sm font-bold">Đội 2: <span id="count-khomao-2" class="text-amber-400">0/2 tuần</span></div>
+          <div class="grid grid-cols-4 gap-2" id="btn-group-team2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DANH SÁCH TRACK ĐÃ NHẬP -->
+    <section id="sec-history" class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+        <h2 class="text-cyan-400 font-bold text-base">📝 DANH SÁCH TRACK ĐÃ NHẬP</h2>
+        
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="history-filter-team" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1 text-xs text-slate-200">
+            <option value="all">Lọc Đội: Tất cả</option>
+            <option value="1">Đội 1</option>
+            <option value="2">Đội 2</option>
+          </select>
+          <select id="history-filter-member" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1 text-xs text-amber-300 font-semibold">
+            <option value="all">👤 Lọc Tên: Tất cả</option>
+          </select>
+          <select id="history-filter-status" class="bg-slate-900 border border-amber-500/60 rounded-xl px-3 py-1 text-xs text-amber-300 font-bold shadow">
+            <option value="all">Trạng thái: Tất cả</option>
+            <option value="pending">⚠️ Chỉ track Cần lưu ý</option>
+            <option value="approved">✅ Track hợp lệ</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300 whitespace-nowrap">
+          <thead class="bg-slate-900 text-slate-400 uppercase text-xs">
+            <tr>
+              <th class="p-3">Ngày</th>
+              <th class="p-3">Tuần</th>
+              <th class="p-3">Thành viên</th>
+              <th class="p-3 text-center">Đội</th>
+              <th class="p-3">Môn</th>
+              <th class="p-3">Quãng đường</th>
+              <th class="p-3">Pace</th>
+              <th class="p-3">Quy đổi</th>
+              <th class="p-3 text-center">Xác nhận Track</th>
+              <th class="p-3 text-center admin-only hidden">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="history-body" class="divide-y divide-slate-700/50"></tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 
   <script>
@@ -94,19 +214,107 @@ Danh Nguyễn,2026-10-07,Bơi,1000,2.11" class="w-full bg-slate-900 border borde
     const ADMIN_PIN = "123456";
     let isAdmin = false;
 
-    const MEMBERS_MAP = {
-      "Thanh Nhã": 1, "Huỳnh Tuấn": 1, "Tùng Trần": 1, "Nguyễn Quân": 1, "Lợi Cao": 1,
-      "Lê Hà": 1, "Hà Trần": 1, "An Đào": 1, "Mỹ Linh": 1, "Văn Lê": 1,
-      "Lê Lợi": 2, "Danh Nguyễn": 2, "Khánh Hòa": 2, "Lê Thương": 2, "Hưng Nguyễn": 2,
-      "Vũ Hậu": 2, "Tùng Tiger": 2, "Quỳnh Anh": 2, "Bảo Việt": 2, "Trâm Lê": 2
+    const MEMBERS = {
+      1: ["Thanh Nhã", "Huỳnh Tuấn", "Tùng Trần", "Nguyễn Quân", "Lợi Cao", "Lê Hà", "Hà Trần", "An Đào", "Mỹ Linh", "Văn Lê"],
+      2: ["Lê Lợi", "Danh Nguyễn", "Khánh Hòa", "Lê Thương", "Hưng Nguyễn", "Vũ Hậu", "Tùng Tiger", "Quỳnh Anh", "Bảo Việt", "Trâm Lê"]
     };
 
+    const ALL_MEMBERS = [];
+    Object.keys(MEMBERS).forEach(tId => {
+      MEMBERS[tId].forEach(name => ALL_MEMBERS.push({ name, teamId: parseInt(tId) }));
+    });
+
+    const MEMBERS_MAP = {};
+    ALL_MEMBERS.forEach(m => MEMBERS_MAP[m.name] = m.teamId);
+
+    const START_DATE = new Date('2026-09-21');
+    let tracks = [];
+    let khoMao = JSON.parse(localStorage.getItem('uprace_khomao_test')) || { 1: [], 2: [] };
+    let memberWeekCompleted = JSON.parse(localStorage.getItem('uprace_member_week_completed_test')) || {};
+
+    function formatDateVN(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateStr;
+    }
+
+    function formatKmVN(val) {
+      if (val === undefined || val === null || isNaN(val)) return '0,00 km';
+      return val.toFixed(2).replace('.', ',') + ' km';
+    }
+
     function toggleAdminAuth() {
-      const pin = prompt("🔑 Nhập PIN Admin:");
-      if (pin === ADMIN_PIN) {
-        isAdmin = true;
-        document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-        document.getElementById('admin-badge').innerText = "👑 Chế độ: ADMIN";
+      if (isAdmin) {
+        isAdmin = false;
+      } else {
+        const pin = prompt("🔑 Nhập PIN Admin:");
+        if (pin === ADMIN_PIN) isAdmin = true;
+      }
+      applyAdminPermissions();
+    }
+
+    function applyAdminPermissions() {
+      const adminElements = document.querySelectorAll('.admin-only');
+      const authBtn = document.getElementById('auth-btn');
+      const adminBadge = document.getElementById('admin-badge');
+
+      if (isAdmin) {
+        document.body.classList.add('is-admin');
+        adminElements.forEach(el => el.classList.remove('hidden'));
+        authBtn.innerText = "🔒 Đăng Xuất Admin";
+        authBtn.className = "bg-rose-500 hover:bg-rose-400 text-white font-black px-3 py-1 rounded-lg shadow";
+        adminBadge.innerHTML = "👑 Chế độ: <strong>ADMIN</strong>";
+        adminBadge.className = "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-2.5 py-1 rounded-lg";
+      } else {
+        document.body.classList.remove('is-admin');
+        adminElements.forEach(el => el.classList.add('hidden'));
+        authBtn.innerText = "🔑 Đăng Nhập Admin";
+        authBtn.className = "bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-lg shadow";
+        adminBadge.innerHTML = "👀 Chế độ: Người Xem";
+        adminBadge.className = "bg-slate-700 text-slate-300 font-bold px-2.5 py-1 rounded-lg";
+      }
+      render();
+    }
+
+    function calculateWeekNumber(dateString) {
+      const selectedDate = new Date(dateString);
+      const diffTime = selectedDate - START_DATE;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return 1;
+      const weekNum = Math.floor(diffDays / 7) + 1;
+      return weekNum > 8 ? 8 : weekNum;
+    }
+
+    async function fetchTracksFromSupabase() {
+      const { data, error } = await supabaseClient.from('tracks').select('*').order('created_at', { ascending: false });
+      if (!error) {
+        tracks = (data || []).map(item => ({
+          id: item.id, date: item.date, teamId: item.team_id, member: item.member,
+          type: item.type, distance: item.distance, pace: item.pace, week: item.week,
+          isSuspicious: item.is_suspicious, note: item.note, isApproved: item.is_approved
+        }));
+        render();
+      }
+    }
+
+    async function approveTrack(id) {
+      const track = tracks.find(t => t.id === id);
+      if (track) {
+        track.isSuspicious = false;
+        track.isApproved = true;
+        await supabaseClient.from('tracks').upsert([{
+          id: track.id, date: track.date, team_id: track.teamId, member: track.member,
+          type: track.type, distance: track.distance, pace: track.pace, week: track.week,
+          is_suspicious: false, note: track.note, is_approved: true
+        }]);
+        fetchTracksFromSupabase();
+      }
+    }
+
+    async function deleteTrackFromSupabase(id) {
+      if (confirm("Xóa track này?")) {
+        await supabaseClient.from('tracks').delete().eq('id', id);
+        fetchTracksFromSupabase();
       }
     }
 
@@ -115,25 +323,26 @@ Danh Nguyễn,2026-10-07,Bơi,1000,2.11" class="w-full bg-slate-900 border borde
       document.getElementById('paste-log-output').classList.add('hidden');
     }
 
+    // XỬ LÝ DÁN DỮ LIỆU ĐƯỢC CHỈNH SỬA CHUẨN ĐÚNG HỆ THỐNG
     async function processPastedData() {
       const text = document.getElementById('paste-input').value.trim();
       const logOutput = document.getElementById('paste-log-output');
 
       if (!text) {
-        alert("⚠️ Chị vui lòng dán đoạn văn bản dữ liệu vào khung trước nhé!");
+        alert("⚠️ Vui lòng dán đoạn chữ vào ô nhé!");
         return;
       }
 
-      logOutput.classList.remove('hidden');
-      logOutput.innerText = "⏳ Đang phân tích văn bản và xử lý...";
+      logOutput.className = "p-3 rounded-xl text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 mt-2 block";
+      logOutput.innerText = "⏳ Đang tải và phân tích dữ liệu...";
 
       const lines = text.split('\n');
       const payloads = [];
-      let successCount = 0;
+      let addedCount = 0;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (!line || line.startsWith('Thành viên')) continue; // Bỏ qua tiêu đề
+        if (!line || line.startsWith('Thành viên')) continue;
 
         const parts = line.split(',');
         if (parts.length < 5) continue;
@@ -148,13 +357,23 @@ Danh Nguyễn,2026-10-07,Bơi,1000,2.11" class="w-full bg-slate-900 border borde
         if (!teamId) continue;
 
         const type = (rawType.includes('bơi') || rawType === 'swim') ? 'swim' : 'run';
+        const week = calculateWeekNumber(rawDate);
 
-        const start = new Date('2026-09-21');
-        const current = new Date(rawDate);
-        const diffDays = Math.floor((current - start) / (1000 * 60 * 60 * 24));
-        const week = Math.min(8, Math.max(1, Math.floor(diffDays / 7) + 1));
+        // KIỂM TRA ĐIỀU KIỆN PACE ĐỂ ĐÁNH DẤU LƯU Ý / ĐỜI DUYỆT ĐÚNG LUẬT
+        let isSuspicious = false;
+        let note = "Nạp tự động từ ảnh Strava";
 
-        const isPaceValid = (type === 'swim' && pace <= 6.0) || (type === 'run' && pace <= 12.0);
+        if (type === 'swim') {
+          if (pace > 6.0 || pace < 1.0) {
+            isSuspicious = true;
+            note = `Pace bơi ${pace} bất thường (>6.0 hoặc <1.0)`;
+          }
+        } else if (type === 'run') {
+          if (pace < 5.0 || pace > 12.0) {
+            isSuspicious = true;
+            note = `Pace chạy ${pace} bất thường (<5.0 hoặc >12.0)`;
+          }
+        }
 
         payloads.push({
           id: Date.now() + i,
@@ -165,27 +384,120 @@ Danh Nguyễn,2026-10-07,Bơi,1000,2.11" class="w-full bg-slate-900 border borde
           distance: distance,
           pace: pace,
           week: week,
-          is_suspicious: !isPaceValid,
-          note: isPaceValid ? "Nạp từ ảnh Strava" : "Pace bất thường",
-          is_approved: isPaceValid,
+          is_suspicious: isSuspicious,
+          note: note,
+          is_approved: !isSuspicious,
           created_at: new Date().toISOString()
         });
 
-        successCount++;
+        addedCount++;
       }
 
       if (payloads.length > 0) {
-        logOutput.innerText = `⏳ Đang nạp ${payloads.length} bài tập lên Supabase...`;
         const { error } = await supabaseClient.from('tracks').upsert(payloads);
         if (error) {
-          logOutput.innerText = `❌ Lỗi lưu Supabase: ${error.message}`;
+          logOutput.className = "p-3 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 mt-2 block";
+          logOutput.innerText = `❌ Lỗi nạp Supabase: ${error.message}`;
         } else {
-          logOutput.innerText = `✅ ĐÃ NẠP THÀNH CÔNG ${successCount} TRACKS NGHỆCH TẬP LÊN WEB!\nTrang web đã tự động cập nhật bảng xếp hạng.`;
+          logOutput.className = "p-3 rounded-xl text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mt-2 block";
+          logOutput.innerText = `✅ ĐÃ NẠP THÀNH CÔNG ${addedCount} TRACKS VÀO HỆ THỐNG! Đã cập nhật lại bảng bên dưới.`;
+          document.getElementById('paste-input').value = '';
+          await fetchTracksFromSupabase();
         }
       } else {
-        logOutput.innerText = "❌ Không tìm thấy dòng dữ liệu hợp lệ. Chị kiểm tra lại định dạng dán nhé!";
+        logOutput.className = "p-3 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 mt-2 block";
+        logOutput.innerText = "❌ Không phân tích được dòng nào. Chị kiểm tra lại định dạng dán nhé!";
       }
     }
+
+    function initMemberSelects() {
+      const selectMember = document.getElementById('input-member');
+      selectMember.innerHTML = `<option value="" disabled selected>-- Chọn thành viên --</option>` + ALL_MEMBERS.map(m => 
+        `<option value="${m.name}" data-team="${m.teamId}">${m.name}</option>`
+      ).join('');
+
+      const filterHistoryMember = document.getElementById('history-filter-member');
+      filterHistoryMember.innerHTML = `<option value="all">👤 Lọc Tên: Tất cả</option>` + 
+        ALL_MEMBERS.map(m => `<option value="${m.name}">${m.name} (Đội ${m.teamId})</option>`).join('');
+    }
+
+    document.getElementById('history-filter-team').addEventListener('change', render);
+    document.getElementById('history-filter-member').addEventListener('change', render);
+    document.getElementById('history-filter-status').addEventListener('change', render);
+
+    function render() {
+      const historyTeamVal = document.getElementById('history-filter-team').value;
+      const historyMemberVal = document.getElementById('history-filter-member').value;
+      const historyStatusVal = document.getElementById('history-filter-status').value;
+
+      const filteredTracks = tracks.filter(t => {
+        const matchTeam = (historyTeamVal === 'all' || t.teamId === parseInt(historyTeamVal));
+        const matchMember = (historyMemberVal === 'all' || t.member === historyMemberVal);
+        
+        let matchStatus = true;
+        const isSuspiciousPending = (t.isSuspicious && !t.isApproved);
+        if (historyStatusVal === 'pending') {
+          matchStatus = isSuspiciousPending;
+        } else if (historyStatusVal === 'approved') {
+          matchStatus = !isSuspiciousPending;
+        }
+
+        return matchTeam && matchMember && matchStatus;
+      });
+
+      filteredTracks.sort((a, b) => b.id - a.id);
+
+      document.getElementById('history-body').innerHTML = filteredTracks.length === 0 
+        ? `<tr><td colspan="10" class="p-4 text-center text-slate-500 italic">Chưa có track nào trong danh sách.</td></tr>`
+        : filteredTracks.map(t => {
+            const converted = t.type === 'swim' ? (t.distance / 1000) * 4 : t.distance / 1000;
+            const w = t.week || calculateWeekNumber(t.date);
+            const isSuspicious = t.isSuspicious && !t.isApproved;
+
+            const formattedDate = formatDateVN(t.date);
+            const formattedDistance = t.distance.toLocaleString('vi-VN');
+            const formattedConverted = formatKmVN(converted);
+
+            let statusHtml = `<span class="text-emerald-400 text-xs font-semibold">✅ Track hợp lệ</span>`;
+            if (isSuspicious) {
+              statusHtml = `
+                <button onclick="approveTrack(${t.id})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2.5 py-1 rounded text-xs font-black shadow flex items-center justify-center gap-1 mx-auto animate-pulse">
+                  ⚠️ Cần lưu ý (Bấm để duyệt)
+                </button>
+              `;
+            } else if (t.isApproved && t.note) {
+              statusHtml = `<span class="text-cyan-400 text-xs font-semibold">✅ Đã duyệt (${t.note})</span>`;
+            }
+
+            return `
+              <tr class="${isSuspicious ? 'bg-amber-500/20 border-l-4 border-amber-500 font-medium' : 'hover:bg-slate-700/30'} transition-all">
+                <td class="p-3 text-slate-300 font-medium text-xs">${formattedDate}</td>
+                <td class="p-3 text-amber-400 font-bold text-xs">Tuần ${w}</td>
+                <td class="p-3 font-semibold text-slate-100">
+                  ${t.member}
+                  ${t.note ? `<span class="block text-[11px] text-amber-300 italic">📝 ${t.note}</span>` : ''}
+                </td>
+                <td class="p-3 text-center">
+                  <span class="inline-block px-2 py-0.5 rounded text-xs font-bold ${t.teamId === 1 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
+                    ${t.teamId}
+                  </span>
+                </td>
+                <td class="p-3 font-bold">${t.type === 'swim' ? '🏊‍♂️ Bơi' : '🏃‍♀️ Chạy'}</td>
+                <td class="p-3">${formattedDistance} m</td>
+                <td class="p-3 font-semibold">${t.pace}</td>
+                <td class="p-3 font-bold text-cyan-400">${formattedConverted}</td>
+                <td class="p-3 text-center">${statusHtml}</td>
+                <td class="p-3 text-center space-x-2 admin-only ${isAdmin ? '' : 'hidden'}">
+                  <button onclick="deleteTrackFromSupabase(${t.id})" class="bg-rose-500/20 text-rose-300 hover:bg-rose-500/40 px-2.5 py-1 rounded text-xs font-medium border border-rose-500/30">🗑 Xóa</button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+    }
+
+    initMemberSelects();
+    applyAdminPermissions();
+    fetchTracksFromSupabase();
   </script>
 </body>
 </html>
